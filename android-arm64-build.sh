@@ -1,8 +1,8 @@
 #!/bin/bash
 #Change NDK to your Android NDK location
-NDK=/c/AndroidNDK
+NDK=/home/burt/Android/android-ndk-r10d
 PLATFORM=$NDK/platforms/android-21/arch-arm64/
-PREBUILT=$NDK/toolchains/aarch64-linux-android-4.9/prebuilt/windows-x86_64
+PREBUILT=$NDK/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64
 
 GENERAL="\
    --enable-cross-compile \
@@ -13,10 +13,10 @@ GENERAL="\
 
 MODULES="\
    --disable-avdevice \
-   --disable-filters \
+   --enable-filters \
    --disable-programs \
    --disable-network \
-   --disable-avfilter \
+   --enable-avfilter \
    --disable-postproc \
    --disable-encoders \
    --disable-protocols \
@@ -24,6 +24,7 @@ MODULES="\
    --disable-doc"
 
 VIDEO_DECODERS="\
+   --enable-decoder=libstagefright_h264 \
    --enable-decoder=h264 \
    --enable-decoder=mpeg4 \
    --enable-decoder=mpeg2video \
@@ -61,7 +62,7 @@ AUDIO_ENCODERS="\
 	  --enable-encoder=pcm_s16le"
 
 MUXERS="\
-  	--enable-muxer=avi"
+  	--enable-muxer=mp4"
 
 PARSERS="\
     --enable-parser=h264 \
@@ -71,6 +72,12 @@ PARSERS="\
     --enable-parser=aac \
     --enable-parser=aac_latm"
 
+PROTOCOLS="\
+    --enable-protocol=concat \
+    --enable-protocol=file"
+    
+ETC="\
+  	--enable-memalign-hack"
 function build_arm64
 {
 ./configure --logfile=conflog.txt --target-os=linux \
@@ -79,8 +86,8 @@ function build_arm64
     ${GENERAL} \
     --sysroot=$PLATFORM \
     --extra-cflags=" -O3 -DANDROID -Dipv6mr_interface=ipv6mr_ifindex -fasm -Wno-psabi -fno-short-enums -fno-strict-aliasing" \
-    --disable-shared \
-    --enable-static \
+    --enable-shared \
+    --disable-static \
     --extra-ldflags="-Wl,-rpath-link=$PLATFORM/usr/lib -L$PLATFORM/usr/lib -nostdlib -lc -lm -ldl -llog" \
     --enable-zlib \
     --disable-everything \
@@ -91,7 +98,9 @@ function build_arm64
     ${AUDIO_ENCODERS} \
     ${DEMUXERS} \
 		${MUXERS} \
-    ${PARSERS}
+    ${PARSERS} \
+    ${PROTOCOLS} \
+    ${ETC}
 
 make clean
 make install
